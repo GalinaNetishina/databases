@@ -1,4 +1,6 @@
 class ObjList:
+    __slots__ = ['__prev', '__next', '__data']
+
     def __init__(self, data: str):
         self.__data = data
         self.__prev = None
