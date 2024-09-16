@@ -5,16 +5,31 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 
-
 class Bulletin(NamedTuple):
     date: dt.date
     url: str
+
+    async def download_file(self, filename):
+        base_url = 'https://spimex.com/'
+        url = base_url + self.url
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(f'temp/{filename}', 'wb') as file:
+                file.write(response.content)
+            logging.debug('file downloaded successfully')
+        else:
+            logging.error('Failed to download file')
 
     def __repr__(self):
         return f'{self.date.strftime("%d-%m-%Y")}, url={self.url}'
 
 
 class Scrapper:
+    """
+    create object with next properties:
+    - default_date: date, before which the data is needed
+    - bulletins: generates sequence of Bulletins, with attributes date and relative url
+     """
     def __init__(self, date='10.09.2024'):
         self._default_date: dt.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
 
@@ -43,7 +58,7 @@ class Scrapper:
             yield bs(response.text, 'html.parser')
 
     @property
-    def bulletins(self) -> Iterator[Bulletin]:
+    async def bulletins(self) -> Iterator[Bulletin]:
         pages = self._get_page()
         for _, page in enumerate(pages):
             divs = page.findAll('div', class_='accordeon-inner__wrap-item')
@@ -51,6 +66,6 @@ class Scrapper:
                 date = dt.datetime.strptime(div.find('span').text, '%d.%m.%Y').date()
                 url = div.find('a', class_='accordeon-inner__item-title')['href']
                 if date <= self.default_date:
-                    logging.info(f'all data before {dt.datetime.strftime(date, "%d.%m.%Y")} received, \nTotal: {_} files')
+                    logging.info(f'all data before {dt.datetime.strftime(date, "%d.%m.%Y")} received')
                     return
                 yield Bulletin(date=date, url=url)
