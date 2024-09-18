@@ -22,4 +22,4 @@ class AsyncORM:
         async with async_session_maker() as session:
             query = select(Item)
             res = await session.execute(query)
-            return res
+            return res.scalars()
