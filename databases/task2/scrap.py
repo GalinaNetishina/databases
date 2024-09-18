@@ -1,16 +1,19 @@
 import logging
-from typing import NamedTuple, Iterator
+from dataclasses import dataclass
+from typing import Iterator, AsyncGenerator
 import datetime as dt
+from datetype import _date as d
 
 import requests
 from bs4 import BeautifulSoup as bs
 
 
-class Bulletin(NamedTuple):
-    date: dt.date
+@dataclass(frozen=True)
+class Bulletin:
+    date: d
     url: str
 
-    async def download_file(self, filename):
+    async def download_file(self, filename) -> None:
         base_url = 'https://spimex.com/'
         url = base_url + self.url
         response = requests.get(url)
@@ -45,7 +48,7 @@ class Scrapper:
         if type(date) == dt.date:
             self._default_date = date
 
-    def _get_page(self, limit: int = None) -> Iterator[bs]:
+    def _get_page(self, limit: int | None = None) -> Iterator[bs]:
         page = 0
         while True:
             page += 1
@@ -61,7 +64,7 @@ class Scrapper:
             yield bs(response.text, 'html.parser')
 
     @property
-    async def bulletins(self) -> Iterator[Bulletin]:
+    async def bulletins(self) -> AsyncGenerator[Bulletin, None]:
         pages = self._get_page()
         for _, page in enumerate(pages):
             divs = page.findAll('div', class_='accordeon-inner__wrap-item')
@@ -71,4 +74,7 @@ class Scrapper:
                 if date <= self.default_date:
                     logging.info(f'all data before {dt.datetime.strftime(date, "%d.%m.%Y")} received')
                     return
-                yield Bulletin(date=date, url=url)
+                yield Bulletin(date, url)
+
+
+scrapper = Scrapper()

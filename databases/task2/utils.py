@@ -1,21 +1,25 @@
 import logging
-from typing import NamedTuple, AsyncGenerator
+from dataclasses import dataclass
+
+from typing import NamedTuple, AsyncGenerator, Generator, Iterator
 from datetime import datetime as dt
+from datetype import _date as d
 import xlrd
 
 from databases.task2.models import Item
 
 
-class RawItem(NamedTuple):
+@dataclass(frozen=True)
+class RawItem:
     exchange_product_id: str
     exchange_product_name: str
     delivery_basis: str
     volume: int
     total: int
     count: int
-    date: dt.date
+    date: d
 
-    def to_Item(self):
+    def to_Item(self) -> Item:
         return Item(
             exchange_product_id=self.exchange_product_id,
             exchange_product_name=self.exchange_product_name,
@@ -30,7 +34,7 @@ class RawItem(NamedTuple):
         )
 
 
-def objects_from_file(filename) -> AsyncGenerator[Item, None]:
+def objects_from_file(filename) -> Iterator[Item]:
     """generates sequence of Item from .xls file"""
     try:
         source = xlrd.open_workbook(f'temp/{filename}')

@@ -3,7 +3,7 @@ import logging
 import datetime as dt
 import os
 
-from databases.task2.scrap import Scrapper
+from databases.task2.scrap import scrapper
 from databases.task2.utils import objects_from_file
 from databases.task2.orm import AsyncORM
 
@@ -12,10 +12,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 async def initial_base() -> None:
     await AsyncORM.create_tables()
-    scrap = Scrapper()
-    scrap.default_date = dt.datetime.strptime('01.01.2024', '%d.%m.%Y').date()
-
-    async for dump in scrap.bulletins:
+    os.makedirs('temp', exist_ok=True)
+    scrapper.default_date = dt.datetime.strptime('01.01.2024', '%d.%m.%Y').date()
+    async for dump in scrapper.bulletins:
         filename = f'{dump.date}.xls'
         await dump.download_file(filename)
         await AsyncORM.insert(objects_from_file(filename))
@@ -34,4 +33,4 @@ async def print_all() -> None:
 
 
 asyncio.run(initial_base())
-#asyncio.run(print_all())
+asyncio.run(print_all())

@@ -37,5 +37,3 @@ class Item(Base):
 
     def __repr__(self):
         return f'{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}'
-
-
