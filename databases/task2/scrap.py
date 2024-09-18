@@ -1,6 +1,7 @@
 import logging
 from typing import NamedTuple, Iterator
 import datetime as dt
+
 import requests
 from bs4 import BeautifulSoup as bs
 
@@ -27,22 +28,24 @@ class Bulletin(NamedTuple):
 class Scrapper:
     """
     create object with next properties:
+
     - default_date: date, before which the data is needed
+
     - bulletins: generates sequence of Bulletins, with attributes date and relative url
      """
     def __init__(self, date='10.09.2024'):
         self._default_date: dt.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
 
     @property
-    def default_date(self):
+    def default_date(self) -> dt.date:
         return self._default_date
 
     @default_date.setter
-    def default_date(self, date: dt.date):
+    def default_date(self, date: dt.date) -> None:
         if type(date) == dt.date:
             self._default_date = date
 
-    def _get_page(self, limit=None) -> Iterator[bs]:
+    def _get_page(self, limit: int = None) -> Iterator[bs]:
         page = 0
         while True:
             page += 1

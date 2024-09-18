@@ -28,7 +28,7 @@ class Item(Base):
     oil_id: Mapped[str]
     delivery_basis_id: Mapped[str]
     delivery_type_id: Mapped[str]
-    volume: Mapped[int] = mapped_column(BigInteger)
+    volume: Mapped[int]
     total: Mapped[int] = mapped_column(BigInteger)
     count: Mapped[int]
     date: Mapped[dt.date]
@@ -36,6 +36,6 @@ class Item(Base):
     updated_on: Mapped[updated_at]
 
     def __repr__(self):
-        return f'{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on}'
+        return f'{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}'
 
 

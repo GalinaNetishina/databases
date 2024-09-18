@@ -3,7 +3,7 @@ from environs import Env
 # from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings():
+class Settings:
     def __init__(self):
         env = Env()
         env.read_env()
@@ -12,6 +12,7 @@ class Settings():
         self.DB_PORT: int = env('DB_PORT')
         self.DB_USER: str = env('DB_USER')
         self.DB_PASS: str = env('DB_PASS')
+        self.DEBUG: bool = True
 
     @property
     def DSN_postgresql_psycopg(self):
