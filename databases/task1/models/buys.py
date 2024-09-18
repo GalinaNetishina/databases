@@ -1,9 +1,26 @@
+import enum
 from datetime import date
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from databases.task1.models import Base, pk
+
+
+class StepVariants(enum.Enum):
+    verified = 'проверка'
+    collect = 'сборка'
+    shipping = 'доставка'
+
+
+class Step(Base):
+    __tablename__ = 'steps'
+
+    id: Mapped[pk]
+    name: Mapped[StepVariants] = mapped_column(String)
+
+    def __repr__(self):
+        return f'{self.id}) {self.name}'
 
 
 class BuyStep(Base):
