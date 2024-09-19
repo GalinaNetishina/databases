@@ -1,7 +1,7 @@
 from environs import Env
 
 
-class Settings():
+class Settings:
     def __init__(self):
         env = Env()
         env.read_env()
@@ -28,6 +28,10 @@ class Settings():
                 f'@{self.DB_HOST}:'
                 f'{self.DB_PORT}/'
                 f'{self.DB_NAME}')
+
+    @property
+    def sqlite_engine(self):
+        return f'sqlite:///{self.DB_NAME}.db'
 
 
 settings = Settings()

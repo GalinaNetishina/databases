@@ -2,57 +2,52 @@ import enum
 from datetime import date
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from databases.task1.models import Base, pk
-
-
-class StepVariants(enum.Enum):
-    verified = 'проверка'
-    collect = 'сборка'
-    shipping = 'доставка'
+from databases.task1.models import BaseModel, pk
 
 
-class Step(Base):
+class StepVariants(str, enum.Enum):
+    VERIFICATION = 'проверка'
+    COLLECTION = 'сборка'
+    SHIPPING = 'доставка'
+
+
+class Step(BaseModel):
     __tablename__ = 'steps'
+    __repr_attrs__ = ['name']
 
     id: Mapped[pk]
     name: Mapped[StepVariants] = mapped_column(String)
 
-    def __repr__(self):
-        return f'{self.id}) {self.name}'
 
-
-class BuyStep(Base):
+class BuyStep(BaseModel):
     __tablename__ = 'buysteps'
+    __repr_attrs__ = ['step', 'date_beg', 'date_end']
 
     id: Mapped[pk]
     date_beg: Mapped[date] = mapped_column()
     date_end: Mapped[date] = mapped_column()
-    step: Mapped[int] = mapped_column(ForeignKey('steps.id'))
-    buy: Mapped[int] = mapped_column(ForeignKey('buys.id'))
-
-    def __repr__(self):
-        return f'{self.id}) {self.date_beg} - {self.date_end}'
+    step_id: Mapped[int] = mapped_column(ForeignKey('steps.id'))
+    buy_id: Mapped[int] = mapped_column(ForeignKey('buys.id'))
 
 
-class Buy(Base):
+class Buy(BaseModel):
     __tablename__ = 'buys'
+    __repr_attrs__ = ['description']
 
     id: Mapped[pk]
     description: Mapped[str] = mapped_column(String(256), nullable=True)
-    client: Mapped[int] = mapped_column(ForeignKey('clients.id'))
-
-    def __repr__(self):
-        return f'{self.id}) {self.description or "Default"}'
+    client_id: Mapped[int] = mapped_column(ForeignKey('clients.id'))
+    client: Mapped["Client"] = relationship(back_populates='buys')
 
 
-class BuyBook(Base):
+class BuyBook(BaseModel):
     __tablename__ = 'buybooks'
+    __repr_attrs__ = ['book', 'client', 'amount']
+
     id: Mapped[pk]
-    buy: Mapped[int] = mapped_column(ForeignKey('buys.id'))
-    book: Mapped[int] = mapped_column(ForeignKey('books.id'))
+    buy_id: Mapped[int] = mapped_column(ForeignKey('buys.id'))
+    book_id: Mapped[int] = mapped_column(ForeignKey('books.id'))
     amount: Mapped[int] = mapped_column()
 
-    def __repr__(self):
-        return f'{self.id}) {self.amount} books'

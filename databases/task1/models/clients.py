@@ -1,28 +1,28 @@
+from typing import List
+
 from pydantic import EmailStr
 from sqlalchemy import String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from databases.task1.models import Base, pk
+from databases.task1.models import BaseModel, pk
 
 
-class City(Base):
+class City(BaseModel):
     __tablename__ = 'cities'
+    __repr_attrs__ = ['name']
 
     id: Mapped[pk]
     name: Mapped[str] = mapped_column(String, unique=True)
     days_delivery: Mapped[int]
 
-    def __repr__(self):
-        return f'{self.name} (delivery takes{self.days_delivery} days)'
 
-
-class Client(Base):
+class Client(BaseModel):
     __tablename__ = 'clients'
+    __repr_attrs__ = ['name', 'email']
 
     id: Mapped[pk]
     name: Mapped[str] = mapped_column()
-    city: Mapped[int | None] = mapped_column(ForeignKey('cities.id'))
+    city: Mapped[int] = mapped_column(ForeignKey('cities.id'))
     email: Mapped[EmailStr] = mapped_column(String, unique=True)
 
-    def __repr__(self):
-        return f'{self.id}){self.name}'
+    buys: Mapped[List['Buy']] = relationship(back_populates='client')
