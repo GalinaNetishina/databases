@@ -1,19 +1,19 @@
-import asyncio
 import logging
 import datetime as dt
 import os
 
-from databases.task2.scrap import scrapper
-from databases.task2.utils import objects_from_file
+from databases.task2.scrap import Scrapper
+from databases.task2.utils import objects_from_file, download_parallel
 from databases.task2.orm import AsyncORM
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 
 
 async def initial_base() -> None:
     await AsyncORM.create_tables()
-    os.makedirs('temp', exist_ok=True)
+
     scrapper.default_date = dt.datetime.strptime('01.01.2023', '%d.%m.%Y').date()
+
     async for dump in scrapper.bulletins:
         filename = f'{dump.date}.xls'
         await dump.download_file(filename)
@@ -23,6 +23,7 @@ async def initial_base() -> None:
 
 
 async def print_all() -> None:
+    await AsyncORM.create_tables()
     res = await AsyncORM.show()
     # for (i, item), _ in zip(enumerate(res.all(), start=1), range(30)): # вывод порции
     for i, item in enumerate(res.all(), start=1):
@@ -32,5 +33,12 @@ async def print_all() -> None:
     #       sep='\n')
 
 
-#asyncio.run(initial_base())
-asyncio.run(print_all())
+# asyncio.run(initial_base())
+
+# asyncio.run(print_all())\
+
+scrapper = Scrapper('01.09.2024')
+scrapper.load_bulletins()
+for *portion_bulletins, _ in zip(scrapper.bulletins, range(10)):
+    download_parallel(portion_bulletins)
+

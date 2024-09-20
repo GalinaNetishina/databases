@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from databases.task1.models.base import BaseModel, pk
@@ -23,10 +23,14 @@ class Author(BaseModel):
     name: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     books: Mapped[List['Book']] = relationship(back_populates='author')
 
+    __table_args__ = (
+        Index('author_name_index', 'name'),
+    )
+
 
 class Book(BaseModel):
     __tablename__ = 'books'
-    __repr_attrs__ = ['title', 'author']
+    __repr_attrs__ = ['title', 'author', 'genre']
 
     id: Mapped[pk]
     title: Mapped[str] = mapped_column(String, nullable=False)
@@ -35,3 +39,8 @@ class Book(BaseModel):
 
     author: Mapped['Author'] = relationship(back_populates='books')
     genre: Mapped[List['Genre']] = relationship(back_populates='books')
+    buy: Mapped['Buy'] = relationship(back_populates='book', secondary='buybooks')
+
+    __table_args__ = (
+        Index('title_index', 'title'),
+    )

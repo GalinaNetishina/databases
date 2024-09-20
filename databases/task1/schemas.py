@@ -3,36 +3,52 @@ from datetime import date
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from pydantic.dataclasses import dataclass
 
+from databases.task1.models import *
 
-class Genre(BaseModel):
-    id: int
+
+class GenrePOST(BaseModel):
     name: str
 
 
-class Author(BaseModel):
+class GenreGET(GenrePOST):
     id: int
+
+
+class AuthorPOST(BaseModel):
     name: str
 
 
-class Book(BaseModel):
+class AuthorGET(AuthorPOST):
     id: int
+
+
+class BookPOST(BaseModel):
     title: str
-    author: int
-    genre: int
+    author: Author
+    genre: Genre
 
 
-class City(BaseModel):
+class BookGET(BookPOST):
     id: int
+
+
+class CityPOST(BaseModel):
     name: str
     days_delivery: int
 
 
-class Client(BaseModel):
+class CityGET(CityPOST):
     id: int
+
+
+class ClientPOST(BaseModel):
     name: str
     city: int
     email: EmailStr
 
+
+class ClientGET(ClientPOST):
+    id: int
 
 class Step(BaseModel):
     id: int

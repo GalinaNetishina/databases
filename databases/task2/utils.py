@@ -1,12 +1,19 @@
 import logging
+import os
+from multiprocessing.pool import ThreadPool
+
+import aiohttp
 from dataclasses import dataclass
 
 from typing import NamedTuple, AsyncGenerator, Generator, Iterator
 from datetime import datetime as dt
+
+import requests
 from datetype import _date as d
 import xlrd
 
 from databases.task2.models import Item
+from databases.task2.scrap import Bulletin
 
 
 @dataclass(frozen=True)
@@ -34,6 +41,27 @@ class RawItem:
         )
 
 
+def download_file(item: Bulletin) -> None:
+    response = requests.get(item.url)
+    filename = str(item.date) + '.xls'
+    if response.status_code == 200:
+        with open(f'temp/{filename}', 'wb') as file:
+            file.write(response.content)
+        logging.debug('file downloaded successfully')
+    else:
+        logging.error('Failed to download file')
+
+
+def download_parallel(items):
+    cpus = os.cpu_count()
+    os.makedirs('temp', exist_ok=True)
+    with ThreadPool(cpus - 1) as pool:
+        pool.close()
+        pool.imap_unordered(download_file, items)
+        pool.join()
+        pool.close()
+
+
 def objects_from_file(filename) -> Iterator[Item]:
     """generates sequence of Item from .xls file"""
     try:
@@ -56,16 +84,16 @@ def objects_from_file(filename) -> Iterator[Item]:
                     int(total),
                     int(count),
                     date
-                    ).to_Item()
+                ).to_Item()
             except ValueError:
                 yield RawItem(
                     id,
                     name.split(',')[0],
                     basis,
-                    int(float(volume)*1000),
-                    int(float(total)*1000),
-                    int(float(count)*1000),
+                    int(float(volume) * 1000),
+                    int(float(total) * 1000),
+                    int(float(count) * 1000),
                     date
-                    ).to_Item()
+                ).to_Item()
     except FileNotFoundError as e:
         logging.critical(e, exc_info=True)

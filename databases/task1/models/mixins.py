@@ -20,11 +20,11 @@ class ReprMixin:
         values = []
         for key in (set(self.__table__.columns.keys()) & set(self.__repr_attrs__)):
             value = getattr(self, key)
-            if len(value) >max_length:
+            if isinstance(value, str) and len(value) > max_length:
                 value = f'{value[:max_length]} ...'
             values.append(f'{key} = {value}')
         return ' '.join(values)
 
     def __repr__(self):
-        id_str = ('#'+ self._id_str) or ''
+        id_str = ('#' + self._id_str) or ''
         return f'<{self.__class__.__name__} {id_str} ({self._repr_attrs_str or ""})>'
