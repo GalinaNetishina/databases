@@ -1,5 +1,4 @@
-from databases.task1.models.base import *
-from databases.task1.models.books import *
-from databases.task1.models.clients import *
-from databases.task1.models.buys import *
+from .books import *
+from .clients import *
+from .buys import *
 

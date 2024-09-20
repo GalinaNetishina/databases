@@ -1,12 +1,12 @@
 from datetime import date
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel as BM, EmailStr as ES, Field, field_validator
 from pydantic.dataclasses import dataclass
 
-from databases.task1.models import *
+from models import *
 
 
-class GenrePOST(BaseModel):
+class GenrePOST(BM):
     name: str
 
 
@@ -14,7 +14,7 @@ class GenreGET(GenrePOST):
     id: int
 
 
-class AuthorPOST(BaseModel):
+class AuthorPOST(BM):
     name: str
 
 
@@ -22,17 +22,17 @@ class AuthorGET(AuthorPOST):
     id: int
 
 
-class BookPOST(BaseModel):
+class BookPOST(BM):
     title: str
-    author: Author
-    genre: Genre
+    author: "AuthorGET"
+    genre: "GenreGET"
 
 
 class BookGET(BookPOST):
     id: int
 
 
-class CityPOST(BaseModel):
+class CityPOST(BM):
     name: str
     days_delivery: int
 
@@ -41,21 +41,22 @@ class CityGET(CityPOST):
     id: int
 
 
-class ClientPOST(BaseModel):
+class ClientPOST(BM):
     name: str
     city: int
-    email: EmailStr
+    email: str
 
 
 class ClientGET(ClientPOST):
     id: int
 
-class Step(BaseModel):
+
+class Step(BM):
     id: int
     name: str
 
 
-class BuyStep(BaseModel):
+class BuyStep(BM):
     id: int
     date_beg: date
     date_end: date = Field()
@@ -69,13 +70,13 @@ class BuyStep(BaseModel):
         return v
 
 
-class Buy(BaseModel):
+class Buy(BM):
     id: int
     description: str
     client: int
 
 
-class BuyBook(BaseModel):
+class BuyBook(BM):
     id: int
     buy: int
     client: int

@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import String, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from databases.task1.models.base import BaseModel, pk
+from .base import BaseModel, pk
 
 
 class Genre(BaseModel):

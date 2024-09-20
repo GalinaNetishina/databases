@@ -2,9 +2,9 @@ import logging
 import datetime as dt
 import os
 
-from databases.task2.scrap import Scrapper
-from databases.task2.utils import objects_from_file, download_parallel
-from databases.task2.orm import AsyncORM
+from scrap import Scrapper
+from utils import objects_from_file, download_parallel
+from orm import AsyncORM
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 

@@ -4,8 +4,9 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload, selectinload
 from faker import Faker
 
-from databases.task1.database import session_factory, sync_engine as se
-from databases.task1.models import *
+from database import session_factory, sync_engine as se
+from models import *
+from schemas import *
 
 faker = Faker()
 
@@ -26,7 +27,7 @@ class DB:
             ses.commit()
 
     @staticmethod
-    def get_data() :
+    def all_books():
         with session_factory() as ses:
             query = (
                 select(Book)
@@ -36,6 +37,41 @@ class DB:
             )
             res = ses.execute(query)
             return res.scalars().all()
+
+    @staticmethod
+    def all_authors():
+        with session_factory() as ses:
+            query = (
+                select(Author)
+                .order_by(Author.name)
+            )
+            res = ses.execute(query)
+            return res.scalars().all()
+
+    @staticmethod
+    def all_genres():
+        with session_factory() as ses:
+            query = (
+                select(Genre)
+                .order_by(Genre.name)
+            )
+            res = ses.execute(query)
+            return res.scalars().all()
+
+    @staticmethod
+    def books_dto():
+        result_dto = [BookGET.model_validate(row, from_attributes=True) for row in DB.all_books()]
+        return result_dto
+
+    @staticmethod
+    def authors_dto():
+        result_dto = [AuthorGET.model_validate(row, from_attributes=True) for row in DB.all_authors()]
+        return result_dto
+
+    @staticmethod
+    def genres_dto():
+        result_dto = [GenreGET.model_validate(row, from_attributes=True) for row in DB.all_genres()]
+        return result_dto
 
     @staticmethod
     def fill_with_fake():
