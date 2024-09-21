@@ -1,3 +1,7 @@
+import logging
+from datetime import time
+from functools import wraps
+import time
 from dotenv import load_dotenv
 import os
 
@@ -30,6 +34,17 @@ class Settings:
                 f'@{self.DB_HOST}:'
                 f'{self.DB_PORT}/'
                 f'{self.DB_NAME}')
+
+    @staticmethod
+    def time_check(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            res = func(*args, **kwargs)
+            stop = time.time()
+            logging.info(f"{func.__name__} - {round(stop - start, 2)}s")
+            return res
+        return wrapper
 
 
 settings = Settings()

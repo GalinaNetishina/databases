@@ -1,4 +1,5 @@
 import logging
+from collections import deque
 from dataclasses import dataclass
 from typing import Iterator, AsyncGenerator, Generator
 import datetime as dt
@@ -7,7 +8,7 @@ from datetype import _date as d
 import requests
 from bs4 import BeautifulSoup as bs, ResultSet
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+from databases.task2.config import settings
 
 
 @dataclass(frozen=True)
@@ -25,7 +26,7 @@ class Scrapper:
 
     - default_date: date, before which the data is needed
 
-    - bulletins: list of Bulletins, with attributes date and url
+    - bulletins: deque of Bulletins, with attributes date and url
 
     and method load_bulletins for receiving its from site
      """
@@ -34,7 +35,7 @@ class Scrapper:
 
     def __init__(self, date='15.09.2024'):
         self._default_date: dt.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
-        self._bulletins = []
+        self._bulletins = deque()
 
     @property
     def default_date(self) -> dt.date:
@@ -46,15 +47,17 @@ class Scrapper:
             self._default_date = date
 
     @property
-    def bulletins(self) -> list[Bulletin]:
+    def bulletins(self) -> deque[Bulletin]:
         return self._bulletins
 
-    def load_bulletins(self) -> None:
+    @settings.time_check
+    def load_bulletins(self):
         for res in self._scrap_next_page():
             if res.date <= self.default_date:
                 logging.info(f"all data after {dt.datetime.strftime(res.date, '%d.%m.%Y')} received")
                 break
             self._bulletins.append(res)
+        return True
 
     def _scrap_next_page(self, page_count: int = 40):
         for page in range(1, page_count):
