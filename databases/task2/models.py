@@ -1,7 +1,7 @@
 from typing import Annotated
 import datetime as dt
 
-from sqlalchemy import text, BigInteger
+from sqlalchemy import text, BigInteger, Index
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -34,6 +34,10 @@ class Item(Base):
     date: Mapped[dt.date]
     created_on: Mapped[created_at]
     updated_on: Mapped[updated_at]
+
+    __table_args = (
+        Index('date', 'date'),
+    )
 
     def __repr__(self):
         return f'{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}'

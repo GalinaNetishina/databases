@@ -1,22 +1,18 @@
 import logging
-from dataclasses import dataclass
-from typing import Iterator, AsyncGenerator, Generator
-import datetime as dt
+from collections import deque
+from typing import Iterator, NamedTuple
+import datetime
 from datetype import _date as d
 
 import requests
 from bs4 import BeautifulSoup as bs, ResultSet
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+from config import settings
 
 
-@dataclass(frozen=True)
-class Bulletin:
+class Bulletin(NamedTuple):
     date: d
     url: str
-
-    def __repr__(self):
-        return f'{self.date.strftime("%d-%m-%Y")}, url={self.url}'
 
 
 class Scrapper:
@@ -25,38 +21,39 @@ class Scrapper:
 
     - default_date: date, before which the data is needed
 
-    - bulletins: list of Bulletins, with attributes date and url
+    - bulletins: deque of Bulletins, with attributes date and url
 
     and method load_bulletins for receiving its from site
      """
 
     _base_url = 'https://spimex.com/'
 
-    def __init__(self, date='15.09.2024'):
-        self._default_date: dt.date = dt.datetime.strptime(date, '%d.%m.%Y').date()
-        self._bulletins = []
+    def __init__(self, date: str = '01.01.2023'):
+        self._default_date: datetime.date = datetime.datetime.strptime(date, '%d.%m.%Y').date()
+        self._bulletins = deque()
 
     @property
-    def default_date(self) -> dt.date:
+    def default_date(self) -> d:
         return self._default_date
 
     @default_date.setter
-    def default_date(self, date: dt.date) -> None:
-        if type(date) == dt.date:
+    def default_date(self, date: d) -> None:
+        if type(date) == datetime.date:
             self._default_date = date
 
     @property
-    def bulletins(self) -> list[Bulletin]:
+    def bulletins(self) -> deque[Bulletin]:
         return self._bulletins
 
+    @settings.time_check
     def load_bulletins(self) -> None:
         for res in self._scrap_next_page():
             if res.date <= self.default_date:
-                logging.info(f"all data after {dt.datetime.strftime(res.date, '%d.%m.%Y')} received")
+                logging.info(f"all data after {res.date} received")
                 break
             self._bulletins.append(res)
 
-    def _scrap_next_page(self, page_count: int = 40):
+    def _scrap_next_page(self, page_count: int = 40) -> Iterator[Bulletin]:
         for page in range(1, page_count):
             url = f'https://spimex.com/markets/oil_products/trades/results/?page=page-{page}'
             response = requests.get(url)
@@ -64,12 +61,12 @@ class Scrapper:
                 logging.error(f'response.status is not ok, {url=}')
                 continue
             logging.debug(f'page#{page}')
-            divs = bs(response.text, 'html.parser')
-            divs = divs.findAll('div', class_='accordeon-inner__wrap-item')
-            yield from self._extract_dates_and_urls(divs)
+            divs = (bs(response.text, 'html.parser')
+                    .findAll('div', class_='accordeon-inner__wrap-item'))
+            yield from self._get_bulletins(divs)
 
-    def _extract_dates_and_urls(self, divs: ResultSet):
+    def _get_bulletins(self, divs: ResultSet) -> Iterator[Bulletin]:
         for div, _ in zip(divs, range(10)):
-            date = dt.datetime.strptime(div.find('span').text, '%d.%m.%Y').date()
+            date = datetime.datetime.strptime(div.find('span').text, '%d.%m.%Y').date()
             url = div.find('a', class_='accordeon-inner__item-title')['href']
             yield Bulletin(date, self.__class__._base_url + url)

@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy import ForeignKey, String, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from databases.task1.models import BaseModel, pk
+from .base import BaseModel, pk
 
 
 class StepVariants(str, enum.Enum):

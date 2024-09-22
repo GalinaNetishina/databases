@@ -2,8 +2,8 @@ from typing import Annotated
 
 from sqlalchemy.orm import DeclarativeBase, mapped_column, scoped_session, sessionmaker
 
-from databases.task1.database import sync_engine
-from databases.task1.models.mixins import ReprMixin
+
+from .mixins import ReprMixin
 
 
 class Base(DeclarativeBase):

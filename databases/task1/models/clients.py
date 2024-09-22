@@ -4,7 +4,7 @@ from pydantic import EmailStr
 from sqlalchemy import String, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from databases.task1.models import BaseModel, pk
+from .base import BaseModel, pk
 
 
 class City(BaseModel):

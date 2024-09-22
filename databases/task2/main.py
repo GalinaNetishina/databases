@@ -1,44 +1,33 @@
+import asyncio
 import logging
-import datetime as dt
-import os
 
-from databases.task2.scrap import Scrapper
-from databases.task2.utils import objects_from_file, download_parallel
-from databases.task2.orm import AsyncORM
+from fastapi import FastAPI
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+from scrap import Scrapper
+from utils import Downloader
+from database import create_tables
+from repository import Repository as Repo
+from router import router as root
 
-
-async def initial_base() -> None:
-    await AsyncORM.create_tables()
-
-    scrapper.default_date = dt.datetime.strptime('01.01.2023', '%d.%m.%Y').date()
-
-    async for dump in scrapper.bulletins:
-        filename = f'{dump.date}.xls'
-        await dump.download_file(filename)
-        await AsyncORM.insert(objects_from_file(filename))
-        os.remove('temp/' + filename)
-        logging.debug('part is loaded')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
-async def print_all() -> None:
-    await AsyncORM.create_tables()
-    res = await AsyncORM.show()
-    # for (i, item), _ in zip(enumerate(res.all(), start=1), range(30)): # вывод порции
-    for i, item in enumerate(res.all(), start=1):
-        print(item)
-    print(f'total: {i} items')
-    # print(*(item for _, item in enumerate(res.all()) if item[0].exchange_product_name.startswith('Топливо')),
-    #       sep='\n')
+async def full_load(after: str = '01.09.2024') -> None:
+    await create_tables()
+    scrapper = Scrapper(after)
+    scrapper.load_bulletins()
+    dl = Downloader(source=scrapper.bulletins)
+    while part := await dl.next_portion():
+        while dl.output:
+            data = dl.output.pop()
+            await Repo.add_many(data)
+        logging.info('portion in DB')
+    logging.info('loading to DB completed')
 
 
-# asyncio.run(initial_base())
+app = FastAPI()
+app.include_router(root)
 
-# asyncio.run(print_all())\
 
-scrapper = Scrapper('01.09.2024')
-scrapper.load_bulletins()
-for *portion_bulletins, _ in zip(scrapper.bulletins, range(10)):
-    download_parallel(portion_bulletins)
-
+if __name__ == "__main__":
+    asyncio.run(full_load())
