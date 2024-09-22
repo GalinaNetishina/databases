@@ -1,13 +1,20 @@
 # Парсер результатов торгов в БД
 
+Установить зависимости
+```bash
+pip install -r requirements.txt
+```
+
 Заполнить .env и загрузить данные
 ```bash
-python databases/task2/main.py
+python main.py
+
 ```
 
 Для проверки запустить сервер
 ```bash
-uvicorn databases/task2/main:app 
+cd ./databases/task2
+uvicorn main:app 
 ```
 [просмотр](http://127.0.0.1:8000/docs#/)
 
@@ -16,6 +23,9 @@ uvicorn databases/task2/main:app
 
 Для проверки запустить сервер
 ```bash
-uvicorn databases/task1/app:app 
+cd ./databases/task1
+uvicorn app:app 
 ```
 [просмотр](http://127.0.0.1:8000/docs#/)
+
+[другой вариант, когда данные внесены](http://127.0.0.1:8000/index/authors)

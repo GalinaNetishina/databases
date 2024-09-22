@@ -9,7 +9,8 @@ from database import create_tables
 from repository import Repository as Repo
 from router import router as root
 
-logging.basicConfig(level=logging.INFO, format="%(time)s %(levelname)s %(message)s")
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
 async def full_load(after: str = '01.09.2024') -> None:
