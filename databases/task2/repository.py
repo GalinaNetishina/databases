@@ -1,4 +1,4 @@
-from typing import Iterator, AsyncGenerator
+from typing import Iterator
 
 from sqlalchemy import select
 

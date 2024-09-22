@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from schema import ItemDTO
-from repository import Repository  as Repo
+from repository import Repository as Repo
 router = APIRouter()
 
 

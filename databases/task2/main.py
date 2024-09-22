@@ -5,15 +5,15 @@ from fastapi import FastAPI
 
 from scrap import Scrapper
 from utils import Downloader
-from orm import DB
+from database import create_tables
 from repository import Repository as Repo
 from router import router as root
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(time)s %(levelname)s %(message)s")
 
 
-async def full_load(after: str = '01.08.2024') -> None:
-    await DB.create_tables()
+async def full_load(after: str = '01.09.2024') -> None:
+    await create_tables()
     scrapper = Scrapper(after)
     scrapper.load_bulletins()
     dl = Downloader(source=scrapper.bulletins)
@@ -27,7 +27,7 @@ async def full_load(after: str = '01.08.2024') -> None:
 
 app = FastAPI()
 app.include_router(root)
+
+
 if __name__ == "__main__":
     asyncio.run(full_load())
-
-

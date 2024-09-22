@@ -5,7 +5,7 @@ import os
 import requests
 import xlrd
 from collections import deque
-from typing import AsyncGenerator, Generator, Iterator, Callable
+from typing import Iterator
 from datetype import _date as d
 
 
@@ -24,6 +24,7 @@ class Downloader:
         return os.path.join(self.output_dir, f'{filename}.xls')
 
     async def next_portion(self) -> bool:
+        """append Items, extracted from few files, to self.output deque"""
         if not self.input:
             logging.info('source deque is empty')
             return False
@@ -50,7 +51,7 @@ class Downloader:
             logging.error('Failed to download file')
 
     async def extract_to_output(self, item: Bulletin) -> None:
-        """from file.xls to self.output deque"""
+        """from file.xls(downloaded from item.url) to self.output deque"""
         filename = await self._download_file(item)
         e = Extractor(filename)
         with e:

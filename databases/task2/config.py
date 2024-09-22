@@ -15,7 +15,6 @@ class Settings:
         self.DB_PORT: str | int = os.environ.get('DB_PORT')
         self.DB_USER: str = os.environ.get('DB_USER')
         self.DB_PASS: str = os.environ.get('DB_PASS')
-        self.DEBUG: bool = False
 
     @property
     def DSN_postgresql_psycopg(self) -> str:
