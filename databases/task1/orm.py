@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from faker import Faker
 
 from database import session_factory, sync_engine as se
+from models.base import Base
 from models import *
 from schemas import *
 

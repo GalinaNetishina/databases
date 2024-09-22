@@ -8,7 +8,7 @@ from datetype import _date as d
 import requests
 from bs4 import BeautifulSoup as bs, ResultSet
 
-from databases.task2.config import settings
+from config import settings
 
 
 @dataclass(frozen=True)
@@ -57,7 +57,6 @@ class Scrapper:
                 logging.info(f"all data after {dt.datetime.strftime(res.date, '%d.%m.%Y')} received")
                 break
             self._bulletins.append(res)
-        return True
 
     def _scrap_next_page(self, page_count: int = 40):
         for page in range(1, page_count):

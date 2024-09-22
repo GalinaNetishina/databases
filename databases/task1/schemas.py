@@ -1,7 +1,5 @@
-from datetime import date
-
 from pydantic import BaseModel as BM, EmailStr as ES, Field, field_validator
-from pydantic.dataclasses import dataclass
+
 
 from models import *
 

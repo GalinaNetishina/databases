@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
-from databases.task2.database import async_engine, async_session_maker
-from databases.task2.models import *
+from database import async_engine, async_session_maker
+from models import *
 
 
 class DB:
@@ -12,10 +12,9 @@ class DB:
             await conn.run_sync(Base.metadata.create_all)
 
     @staticmethod
-    async def insert(args):
-        async with async_session_maker() as session:
-            session.add_all(args)
-            await session.commit()
+    async def reflect_tables():
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.reflect)
 
     @staticmethod
     async def get_all():
