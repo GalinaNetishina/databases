@@ -7,7 +7,7 @@ pip install -r requirements.txt
 
 Заполнить .env и загрузить данные
 ```bash
-python main.py
+python databases/task2/main.py
 
 ```
 
