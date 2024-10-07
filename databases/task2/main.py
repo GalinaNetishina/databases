@@ -4,7 +4,6 @@ import time
 
 from fastapi import FastAPI
 
-from scrap import Scrapper
 from utils import Downloader
 from database import create_tables
 from router import router as root
@@ -16,20 +15,18 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 async def full_load(after: str = "01.01.2023") -> None:
     await create_tables()
-    scrapper = Scrapper(after)
-    scrapper.load_bulletins()
-    dl = Downloader(source=scrapper.bulletins)
-    await dl.download()
-    start = time.time()
 
-    while part := await dl.next_portion():
-        while dl.output:
-            data = dl.output.pop()
-            await Repo.add_many(data)
+    start = time.time()
+    dl = Downloader(after)
+    await dl.download()
+    stop = time.time()
+    logging.info(f"load to files time: - {round(stop - start, 2)}s")
+
+    start = time.time()
+    while dl.output:
+        await Repo.add_many(dl.output.pop())
     stop = time.time()
     logging.info(f"load to DB time: - {round(stop - start, 2)}s")
-    #     logging.info('portion in DB')
-    # logging.info('loading to DB completed')
 
 
 app = FastAPI()

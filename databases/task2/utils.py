@@ -11,7 +11,6 @@ from datetype import _date as d
 import aiofiles
 
 from models import Item
-from scrap import Bulletin, Scrapper
 
 
 async def write_file(filename, data):
@@ -19,50 +18,48 @@ async def write_file(filename, data):
         await file.write(data)
 
 
-async def _fetch_file(item: Bulletin, session) -> None:
-    async with session.get(item.url) as response:
-        data = await response.read()
-        filename = os.path.join("temp", f"{item.date}.xls")
-        await write_file(filename, data)
-
-
 class Downloader:
-    def __init__(self, source: deque[Bulletin], output_dir: str = "temp"):
-        self.input = source
-        os.makedirs(output_dir, exist_ok=True)
-        self.output_dir = output_dir
+    def __init__(self, start: str = "01.10.2024"):
+        start: datetime.date = datetime.datetime.strptime(start, "%d.%m.%Y").date()
+        end = datetime.datetime.today().date()
+        self.period = [
+            start + datetime.timedelta(days=i) for i in range((end - start).days + 1)
+        ]
+        self.output_dir = "temp"
+        os.makedirs("temp", exist_ok=True)
         self.output = deque()
 
-    def _file(self, filename: d) -> str | os.PathLike[str]:
-        return os.path.join(self.output_dir, f"{filename}.xls")
+    @staticmethod
+    async def _fetch_file(date: d, session) -> None:
+        url = f'https://spimex.com//upload/reports/oil_xls/oil_xls_{date.strftime("%Y%m%d")}162000.xls'
+        async with session.get(url) as response:
+            if response.status == 200:
+                data = await response.read()
+                filename = os.path.join("temp", f'{date.strftime("%Y%m%d")}.xls')
+                await write_file(filename, data)
 
-    async def next_portion(self) -> bool:
-        """append Items, extracted from few files, to self.output deque"""
-        if not self.input:
-            logging.info("source deque is empty")
-            return False
-        portion = []
-        for _ in range(10):
-            if not self.input:
-                break
-            portion.append(self.input.pop())
-        tasks = [asyncio.create_task(self.extract_to_output(i)) for i in portion]
-        await asyncio.gather(*tasks)
-        # logging.info('portion is extracted')
-        return True
-
-    async def extract_to_output(self, item) -> None:
+    async def extract_to_output(self, filename) -> None:
         """from file.xls to self.output deque"""
-        e = Extractor(self._file(item.date))
+        e = Extractor(filename)
         with e:
             self.output.append(e.objects)
 
     async def download(self) -> None:
-        async with aiohttp.ClientSession() as session:
-            tasks = [
-                asyncio.create_task(_fetch_file(item, session)) for item in self.input
-            ]
+        try:
+            async with aiohttp.ClientSession() as session:
+                tasks = [
+                    asyncio.create_task(self._fetch_file(date, session))
+                    for date in self.period
+                ]
+                await asyncio.gather(*tasks)
+            logging.info(f"all data after {self.period[0]} received")
+            tasks = []
+            for date in self.period:
+                filename = os.path.join("temp", f'{date.strftime("%Y%m%d")}.xls')
+                tasks.append(self.extract_to_output(filename))
             await asyncio.gather(*tasks)
+        except FileNotFoundError:
+            pass
 
 
 class Extractor:
@@ -70,8 +67,11 @@ class Extractor:
         self.source = file
 
     def __enter__(self):
-        self.xls = xlrd.open_workbook(self.source)
-        self.sheet = self.xls.sheet_by_index(0)
+        try:
+            self.xls = xlrd.open_workbook_xls(self.source)
+            self.sheet = self.xls.sheet_by_index(0)
+        except FileNotFoundError:
+            raise
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.remove(self.source)
@@ -95,7 +95,7 @@ class Extractor:
                 self.sheet[i][j].value for j in range(self.sheet.ncols)
             )
             volume, total, count = tail[0], tail[1], tail[5]
-            date = datetime.datetime.strptime(self.source[-14:-4], "%Y-%m-%d").date()
+            date = datetime.datetime.strptime(self.source[-12:-4], "%Y%m%d").date()
             if self.is_not_ordered(volume, total, count):
                 continue
             yield Item(
