@@ -28,20 +28,20 @@ def create_fastapi_app():
         return DB.authors_dto()
 
     @app.post("/author")
-    async def post_author(
-            author: Annotated[AuthorPOST, Depends()]
-    ):
+    async def post_author(author: Annotated[AuthorPOST, Depends()]):
 
         DB.add_data([Author(**author.dict())])
-        return {'status': 201}
+        return {"status": 201}
 
     @app.get("/genres", tags=["Genres"])
     async def get_genres():
         return DB.genres_dto()
 
-    @app.get('/index/{target}', response_class=HTMLResponse)
+    @app.get("/index/{target}", response_class=HTMLResponse)
     def index(target: str, request: Request):
-        return templates.TemplateResponse("index.html", {"request": request, "target": target})
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "target": target}
+        )
 
     return app
 

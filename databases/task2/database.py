@@ -5,10 +5,7 @@ from models import Base
 
 
 async_engine = create_async_engine(
-    url=settings.DSN_postgresql_asyncpg,
-    future=True,
-    pool_size=50,
-    max_overflow=100
+    url=settings.DSN_postgresql_asyncpg, future=True, pool_size=50, max_overflow=100
 )
 
 
