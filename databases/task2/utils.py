@@ -2,31 +2,44 @@ import asyncio
 import datetime
 import logging
 import os
-import requests
+
+import aiohttp
 import xlrd
 from collections import deque
 from typing import Iterator
 from datetype import _date as d
-
+import aiofiles
 
 from models import Item
-from scrap import Bulletin
+from scrap import Bulletin, Scrapper
+
+
+async def write_file(filename, data):
+    async with aiofiles.open(filename, "wb") as file:
+        await file.write(data)
+
+
+async def _fetch_file(item: Bulletin, session) -> None:
+    async with session.get(item.url) as response:
+        data = await response.read()
+        filename = os.path.join("temp", f"{item.date}.xls")
+        await write_file(filename, data)
 
 
 class Downloader:
-    def __init__(self, source: deque[Bulletin], output_dir: str = 'temp'):
+    def __init__(self, source: deque[Bulletin], output_dir: str = "temp"):
         self.input = source
         os.makedirs(output_dir, exist_ok=True)
         self.output_dir = output_dir
         self.output = deque()
 
     def _file(self, filename: d) -> str | os.PathLike[str]:
-        return os.path.join(self.output_dir, f'{filename}.xls')
+        return os.path.join(self.output_dir, f"{filename}.xls")
 
     async def next_portion(self) -> bool:
         """append Items, extracted from few files, to self.output deque"""
         if not self.input:
-            logging.info('source deque is empty')
+            logging.info("source deque is empty")
             return False
         portion = []
         for _ in range(10):
@@ -35,27 +48,21 @@ class Downloader:
             portion.append(self.input.pop())
         tasks = [asyncio.create_task(self.extract_to_output(i)) for i in portion]
         await asyncio.gather(*tasks)
-        logging.info('portion is extracted')
+        # logging.info('portion is extracted')
         return True
 
-    async def _download_file(self, item: Bulletin) -> str | os.PathLike[str]:
-        response = requests.get(item.url, stream=True)
-        path = self._file(item.date)
-        if response.status_code == 200:
-            with open(path, 'wb') as file:
-                for chunk in response:
-                    file.write(chunk)
-            logging.debug(f'file {path} downloaded successfully')
-            return path
-        else:
-            logging.error('Failed to download file')
-
-    async def extract_to_output(self, item: Bulletin) -> None:
-        """from file.xls(downloaded from item.url) to self.output deque"""
-        filename = await self._download_file(item)
-        e = Extractor(filename)
+    async def extract_to_output(self, item) -> None:
+        """from file.xls to self.output deque"""
+        e = Extractor(self._file(item.date))
         with e:
             self.output.append(e.objects)
+
+    async def download(self) -> None:
+        async with aiohttp.ClientSession() as session:
+            tasks = [
+                asyncio.create_task(_fetch_file(item, session)) for item in self.input
+            ]
+            await asyncio.gather(*tasks)
 
 
 class Extractor:
@@ -82,16 +89,18 @@ class Extractor:
 
     @property
     def objects(self) -> Iterator[Item]:
-        """extracts Items from .xls file"""
+        """returns iterator of Items, extracted from .xls file"""
         for i in range(8, self.sheet.nrows - 2):
-            _, id, name, basis, *tail = (self.sheet[i][j].value for j in range(self.sheet.ncols))
+            _, id, name, basis, *tail = (
+                self.sheet[i][j].value for j in range(self.sheet.ncols)
+            )
             volume, total, count = tail[0], tail[1], tail[5]
-            date = datetime.datetime.strptime(self.source[-14:-4], '%Y-%m-%d').date()
+            date = datetime.datetime.strptime(self.source[-14:-4], "%Y-%m-%d").date()
             if self.is_not_ordered(volume, total, count):
                 continue
             yield Item(
                 exchange_product_id=id,
-                exchange_product_name=name.split(',')[0],
+                exchange_product_name=name.split(",")[0],
                 oil_id=id[:4],
                 delivery_basis_id=id[4:7],
                 delivery_basis_name=basis,
@@ -99,5 +108,5 @@ class Extractor:
                 volume=self.get_int(volume),
                 total=self.get_int(total),
                 count=self.get_int(count),
-                date=date
+                date=date,
             )

@@ -9,17 +9,21 @@ class Base(DeclarativeBase):
     pass
 
 
-created_at = Annotated[dt.datetime, mapped_column(
-    server_default=text("TIMEZONE('utc', now())"))]
+created_at = Annotated[
+    dt.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))
+]
 
-updated_at = Annotated[dt.datetime, mapped_column(
-    server_default=text("TIMEZONE('utc', now())"),
-    server_onupdate=text("TIMEZONE('utc', now())")
-)]
+updated_at = Annotated[
+    dt.datetime,
+    mapped_column(
+        server_default=text("TIMEZONE('utc', now())"),
+        server_onupdate=text("TIMEZONE('utc', now())"),
+    ),
+]
 
 
 class Item(Base):
-    __tablename__ = 'spimex_trading_results'
+    __tablename__ = "spimex_trading_results"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     exchange_product_id: Mapped[str]
@@ -35,9 +39,7 @@ class Item(Base):
     created_on: Mapped[created_at]
     updated_on: Mapped[updated_at]
 
-    __table_args = (
-        Index('date', 'date'),
-    )
+    __table_args = (Index("date", "date"),)
 
     def __repr__(self):
-        return f'{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}'
+        return f"{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}"

@@ -63,8 +63,8 @@ class BuyStep(BM):
 
     @field_validator("date_end")
     def fi(cls, v, fields) -> date:
-        if v < fields['data_beg']:
-            raise ValueError('date of end must be after date of beginning')
+        if v < fields["data_beg"]:
+            raise ValueError("date of end must be after date of beginning")
         return v
 
 

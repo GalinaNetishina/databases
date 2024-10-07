@@ -28,7 +28,9 @@ class Repository:
         async with async_session_maker() as session:
             query = select(Item).filter_by(id=id)
             res = await session.execute(query)
-            res_dto = ItemDTO.model_validate(res.scalars().one_or_none(), from_attributes=True)
+            res_dto = ItemDTO.model_validate(
+                res.scalars().one_or_none(), from_attributes=True
+            )
             return res_dto
 
     @classmethod
@@ -36,4 +38,7 @@ class Repository:
         async with async_session_maker() as session:
             query = select(Item).order_by(Item.date)
             res = await session.execute(query)
-            return map(lambda x: ItemDTO.model_validate(x, from_attributes=True), res.scalars().all())
+            return map(
+                lambda x: ItemDTO.model_validate(x, from_attributes=True),
+                res.scalars().all(),
+            )
