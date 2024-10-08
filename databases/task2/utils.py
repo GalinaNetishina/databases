@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import logging
 import os
+from collections import deque
 
 import aiohttp
 import xlrd
@@ -23,25 +24,24 @@ class Downloader:
         self.cb = send_to
         self.output_dir = "temp"
         os.makedirs("temp", exist_ok=True)
-        self.process = asyncio.Queue(20)
-        self.output = asyncio.Queue(20)
+        self.process = asyncio.Queue()
+        self.output = deque()
 
-    async def send(self):
-        await asyncio.gather(self.download(), self.resend())
+    async def download_1(self) -> None:
+        await asyncio.gather(self.produce())
+        await asyncio.gather(self.consume())
 
-    async def download(self) -> None:
+    async def download_2(self) -> None:
         await asyncio.gather(self.produce(), self.consume())
 
     async def resend(self):
         while self.output:
-            logging.info("sending")
-            data = await self.output.get()
+            data = self.output.pop()
             await self.cb(data)
 
     async def produce(self) -> None:
         async with aiohttp.ClientSession() as session:
             end = datetime.datetime.today().date()
-            logging.info(f"from {self.start} to {end}")
             for i in range((end - self.start).days + 1):
                 file = await self._fetch_file(
                     self.start + datetime.timedelta(days=i), session
@@ -49,7 +49,6 @@ class Downloader:
                 if not file:
                     continue
                 await self.process.put(file)
-                logging.info(f"produce...{file}")
             await self.process.put(None)
 
     async def consume(self) -> None:
@@ -58,9 +57,9 @@ class Downloader:
             item = await self.process.get()
             if item is None:
                 break
-            logging.info(f"consume item...{item}")
-            await self.extract_to_output(item)
-            self.process.task_done()
+            # logging.info(f"consume item...{item}")
+            self.extract_to_output(item)
+            await self.resend()
 
     @staticmethod
     async def _fetch_file(date: d, session) -> str:
@@ -72,11 +71,11 @@ class Downloader:
                 await write_file(filename, data)
                 return filename
 
-    async def extract_to_output(self, filename) -> None:
+    def extract_to_output(self, filename) -> None:
         """from file.xls to self.output deque"""
         e = Extractor(filename)
         with e:
-            await self.output.put(e.objects)
+            self.output.append(e.objects)
 
 
 class Extractor:

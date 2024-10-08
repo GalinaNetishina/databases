@@ -10,18 +10,22 @@ from router import router as root
 
 from repository import Repository as Repo
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format=" %(message)s")
 
 
 async def full_load(after: str = "01.01.2024") -> None:
     await create_tables()
+    dl = Downloader(after, Repo.add_many)
 
     start = time.time()
-    dl = Downloader(after, Repo.add_many)
-    # await dl.download()
-    await dl.send()
+    await dl.download_1()
     stop = time.time()
-    logging.info(f"load to DB time: - {round(stop - start, 2)}s")
+    logging.info(f"load to DB in 2fases time: - {round(stop - start, 2)}s")
+
+    start = time.time()
+    await dl.download_2()
+    stop = time.time()
+    logging.info(f"load to DB paralel time: - {round(stop - start, 2)}s")
 
 
 app = FastAPI()
