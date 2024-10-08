@@ -32,6 +32,7 @@ class Downloader:
         await asyncio.gather(self.consume())
 
     async def download_2(self) -> None:
+        self.process = asyncio.Queue(20)
         await asyncio.gather(self.produce(), self.consume())
 
     async def resend(self):
@@ -49,6 +50,7 @@ class Downloader:
                 if not file:
                     continue
                 await self.process.put(file)
+                logging.info(f"produce...{file}")
             await self.process.put(None)
 
     async def consume(self) -> None:
@@ -57,8 +59,8 @@ class Downloader:
             item = await self.process.get()
             if item is None:
                 break
-            # logging.info(f"consume item...{item}")
-            self.extract_to_output(item)
+            logging.info(f"consume...{item}")
+            self.extract_to_output(os.path.join(item))
             await self.resend()
 
     @staticmethod
