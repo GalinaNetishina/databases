@@ -42,4 +42,6 @@ class Item(Base):
     __table_args = (Index("date", "date"),)
 
     def __repr__(self):
-        return f"{self.date} : {self.exchange_product_name:80}| {self.count:6} договоров| {self.created_on.date()}"
+        return (
+            f"{self.date} : {self.exchange_product_name:40}| {self.count:6} договоров"
+        )

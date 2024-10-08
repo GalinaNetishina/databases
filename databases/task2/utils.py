@@ -5,8 +5,7 @@ import os
 
 import aiohttp
 import xlrd
-from collections import deque
-from typing import Iterator
+from typing import Iterator, Callable
 from datetype import _date as d
 import aiofiles
 
@@ -19,47 +18,65 @@ async def write_file(filename, data):
 
 
 class Downloader:
-    def __init__(self, start: str = "01.10.2024"):
-        start: datetime.date = datetime.datetime.strptime(start, "%d.%m.%Y").date()
-        end = datetime.datetime.today().date()
-        self.period = [
-            start + datetime.timedelta(days=i) for i in range((end - start).days + 1)
-        ]
+    def __init__(self, start: str, send_to: Callable):
+        self.start: datetime.date = datetime.datetime.strptime(start, "%d.%m.%Y").date()
+        self.cb = send_to
         self.output_dir = "temp"
         os.makedirs("temp", exist_ok=True)
-        self.output = deque()
+        self.process = asyncio.Queue(20)
+        self.output = asyncio.Queue(20)
+
+    async def send(self):
+        await asyncio.gather(self.download(), self.resend())
+
+    async def download(self) -> None:
+        await asyncio.gather(self.produce(), self.consume())
+
+    async def resend(self):
+        while self.output:
+            logging.info("sending")
+            data = await self.output.get()
+            await self.cb(data)
+
+    async def produce(self) -> None:
+        async with aiohttp.ClientSession() as session:
+            end = datetime.datetime.today().date()
+            logging.info(f"from {self.start} to {end}")
+            for i in range((end - self.start).days + 1):
+                file = await self._fetch_file(
+                    self.start + datetime.timedelta(days=i), session
+                )
+                if not file:
+                    continue
+                await self.process.put(file)
+                logging.info(f"produce...{file}")
+            await self.process.put(None)
+
+    async def consume(self) -> None:
+        """from self.process que with filenames to self.output que"""
+        while True:
+            item = await self.process.get()
+            if item is None:
+                break
+            logging.info(f"consume item...{item}")
+            await self.extract_to_output(item)
+            self.process.task_done()
 
     @staticmethod
-    async def _fetch_file(date: d, session) -> None:
+    async def _fetch_file(date: d, session) -> str:
         url = f'https://spimex.com//upload/reports/oil_xls/oil_xls_{date.strftime("%Y%m%d")}162000.xls'
         async with session.get(url) as response:
             if response.status == 200:
                 data = await response.read()
                 filename = os.path.join("temp", f'{date.strftime("%Y%m%d")}.xls')
                 await write_file(filename, data)
+                return filename
 
     async def extract_to_output(self, filename) -> None:
         """from file.xls to self.output deque"""
         e = Extractor(filename)
         with e:
-            self.output.append(e.objects)
-
-    async def download(self) -> None:
-        try:
-            async with aiohttp.ClientSession() as session:
-                tasks = [
-                    asyncio.create_task(self._fetch_file(date, session))
-                    for date in self.period
-                ]
-                await asyncio.gather(*tasks)
-            logging.info(f"all data after {self.period[0]} received")
-            tasks = []
-            for date in self.period:
-                filename = os.path.join("temp", f'{date.strftime("%Y%m%d")}.xls')
-                tasks.append(self.extract_to_output(filename))
-            await asyncio.gather(*tasks)
-        except FileNotFoundError:
-            pass
+            await self.output.put(e.objects)
 
 
 class Extractor:
