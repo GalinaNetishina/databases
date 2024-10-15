@@ -1,0 +1,21 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.line {
+  width: 95vw;
+  display: flex;
+}
+
+td {
+  display: inline;
+  text-align: left;
+  width: 40%;
+}
+
+.number {  
+  width: 20%;
+}

@@ -1,7 +1,6 @@
-from typing import Annotated
 import datetime as dt
 
-from sqlalchemy import text, BigInteger, Index
+from sqlalchemy import BigInteger
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -9,17 +8,17 @@ class Base(DeclarativeBase):
     pass
 
 
-created_at = Annotated[
-    dt.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))
-]
+# created_at = Annotated[
+#     dt.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))
+# ]
 
-updated_at = Annotated[
-    dt.datetime,
-    mapped_column(
-        server_default=text("TIMEZONE('utc', now())"),
-        server_onupdate=text("TIMEZONE('utc', now())"),
-    ),
-]
+# updated_at = Annotated[
+#     dt.datetime,
+#     mapped_column(
+#         server_default=text("TIMEZONE('utc', now())"),
+#         server_onupdate=text("TIMEZONE('utc', now())"),
+#     ),
+# ]
 
 
 class Item(Base):
@@ -35,11 +34,9 @@ class Item(Base):
     volume: Mapped[int]
     total: Mapped[int] = mapped_column(BigInteger)
     count: Mapped[int]
-    date: Mapped[dt.date]
-    created_on: Mapped[created_at]
-    updated_on: Mapped[updated_at]
+    date: Mapped[dt.date] = mapped_column(index=True)
 
-    __table_args = (Index("date", "date"),)
+    # __table_args = (Index("date", "date"),)
 
     def __repr__(self):
         return (

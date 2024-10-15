@@ -27,13 +27,9 @@ class Downloader:
         self.process = asyncio.Queue()
         self.output = deque()
 
-    async def download_1(self) -> None:
+    async def download(self) -> None:
         await asyncio.gather(self.produce())
         await asyncio.gather(self.consume())
-
-    async def download_2(self) -> None:
-        self.process = asyncio.Queue(20)
-        await asyncio.gather(self.produce(), self.consume())
 
     async def resend(self):
         while self.output:
@@ -102,7 +98,7 @@ class Extractor:
     def get_int(str_digit: str) -> int:
         try:
             return int(str_digit)
-        except:
+        except Exception:
             return int(float(str_digit) * 1000)
 
     @property
