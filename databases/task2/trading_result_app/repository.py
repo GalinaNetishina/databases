@@ -22,7 +22,7 @@ class Repository:
     @classmethod
     async def add_many(cls, session, data) -> None:
        
-            session.add_all(data)
+            session.bulk_save_objects(data)
             await session.commit()
 
     @classmethod
@@ -73,7 +73,7 @@ class Repository:
                 .distinct(Item.date)
                 .limit(count)
             )
-            print(query)
+            
             res = await session.execute(query)
             return list(
                 map(

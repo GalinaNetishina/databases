@@ -9,6 +9,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-WORKDIR trading_result_app
+RUN chmod a+x docker/*.sh
 
-CMD gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+# WORKDIR trading_result_app
+
+# CMD ["gunicorn main:app", "--workers 4", "--worker-class uvicorn.workers.UvicornWorker", "--bind 0.0.0.0:8000", "--timeout 600"]

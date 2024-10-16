@@ -17,14 +17,6 @@ from config import settings
 # logging.basicConfig(level=logging.DEBUG, format=" %(message)s")
 
 
-# async def test_load() -> None:
-#     after = await Repo.get_last_trading_dates(1)
-#     if datetime.today().date() - after[0].date > timedelta(days=3):
-#         after = after[0].date.strftime("%d.%m.%Y")
-#         dl = Downloader(after, Repo.add_many)
-#         await dl.download()
-#         print("load to DB complete")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,7 +24,6 @@ async def lifespan(app: FastAPI):
         f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}", encoding="utf8", decode_responses=True
     )
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    # await test_load()
     yield
 
 

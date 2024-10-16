@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_USER: str
     DB_PASS: str
+    POSTGRES_PASSWORD: str
     SMTP_USER: str
     SMTP_PASSWORD: str
     REDIS_HOST: str
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
     FRONTEND_PORT: int
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(Path.cwd().parent, ".env")
+        env_file=os.path.join(Path.cwd().parent, ".env-non-dev")
     )
 
     @property
