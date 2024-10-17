@@ -1,12 +1,14 @@
 import { TItem, TItemList } from "./models";
 
 function Item({
+  date,
   exchange_product_id,
    exchange_product_name,
   delivery_basis_name,
 total, count, volume}: TItem) {
   return (
-    <tr className="line">      
+    <tr className="line">     
+      <td className="number">{date}</td> 
       <td className="number">{exchange_product_id}</td>
       <td>{exchange_product_name}</td>
       <td>{delivery_basis_name}</td>
@@ -20,7 +22,7 @@ export default function ListView({items}: TItemList) {
   return (
     <div>
       {items.map((item: TItem) =>
-        <Item {...item} />)}      
+        <Item key={item.exchange_product_id} {...item} />)}      
     </div>
   )
 }

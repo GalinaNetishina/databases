@@ -8,11 +8,15 @@ services:
       - 5432
     env_file:
       - .env-non-dev
+    volumes:
+     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+     - 5433:5432
 
   redis:
     image: redis:latest
     container_name: redis_app
-    command: --port 5300
+    command: --port 6379
 
   app:
     build:
@@ -30,21 +34,21 @@ services:
 
   celery:
     build: 
-      context: .
+      context: .fastapi_app/trading_result_app
     env_file:
       - .env-non-dev
     container_name: celery_app
-    command: ['celery --app=tasks.tasks:celery worker -l INFO']
+    command: ['celery --app=tasks:celery beat -l INFO']
     depends_on:       
       - redis
 
   flower:
     build: 
-      context: .
+      context: ./fastapi_app/trading_result_app
     env_file:
       - .env-non-dev
     container_name: flower_app
-    command: ['celery --app=tasks.tasks:celery flower']
+    command: ['celery --app=tasks:celery flower']
     depends_on:
       - redis       
       - celery

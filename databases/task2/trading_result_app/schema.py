@@ -1,6 +1,9 @@
 import datetime
 
 from pydantic import BaseModel, Field
+from fastapi_filter.contrib.sqlalchemy import Filter
+
+from models import Item
 
 
 class TradingDay(BaseModel):
@@ -20,5 +23,24 @@ class ItemFull(ItemDTO):
     oil_id: str
     delivery_basis_id: str
     delivery_type_id: str
-    created_on: datetime.datetime
-    updated_on: datetime.datetime
+
+
+class ItemIdFilter(Filter):
+    exchange_product_id: str | None = None
+    delivery_basis_id: str | None = None
+    delivery_type_id: str | None = None
+
+    class Constants(Filter.Constants):
+        model = Item
+
+
+class ItemDateIdFilter(ItemIdFilter):
+    model_config = {'extra': "allow"}
+    date__gte: datetime.date | None = Field(
+        alias="start_date",
+        default=datetime.datetime.today().date() - datetime.timedelta(days=7),
+    )
+    date__lte: datetime.date | None = Field(
+        alias="end_date", default=datetime.datetime.today().date()
+    )
+
