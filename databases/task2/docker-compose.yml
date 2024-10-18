@@ -32,25 +32,49 @@ services:
       - redis
 
 
-  celery:
+  celery-worker:
     build: 
-      context: .fastapi_app/trading_result_app
+      context: .
     env_file:
       - .env-non-dev
-    container_name: celery_app
-    command: ['celery --app=tasks:celery beat -l INFO']
+    container_name: celery_worker
+    command: ["/fastapi_app/docker/celery.sh"]
     depends_on:       
       - redis
 
+
   flower:
     build: 
-      context: ./fastapi_app/trading_result_app
-    env_file:
-      - .env-non-dev
+      context: .
     container_name: flower_app
-    command: ['celery --app=tasks:celery flower']
+    command: ["/fastapi_app/docker/flower.sh"]
     depends_on:
-      - redis       
-      - celery
+      - redis  
+      - celery-worker 
     ports:
       - 5555:5555
+
+
+  celery-beat:
+    build: 
+      context: .
+    env_file:
+      - .env-non-dev
+    container_name: celery_beat
+    command: ["/fastapi_app/docker/beat.sh"]
+    depends_on:       
+      - redis
+      - flower
+
+  # front:
+  #   build:
+  #     context: ./frontend
+  #   env_file:
+  #     - .env-non-dev
+  #   container_name: front_app 
+  #   ports:
+  #     - 5173:5173
+  #   depends_on: 
+  #     - app
+
+

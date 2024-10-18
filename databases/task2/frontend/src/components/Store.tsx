@@ -12,6 +12,7 @@ export default function Store () {
   const handler = (url) => {    
     setSource(url)
     fetchItems()
+    console.log(source, items)
   }
   
   const fetchItems = () => {

@@ -7,22 +7,35 @@ function Item({
   delivery_basis_name,
 total, count, volume}: TItem) {
   return (
-    <tr className="line">     
-      <td className="number">{date}</td> 
-      <td className="number">{exchange_product_id}</td>
+    <tr >     
+      <td >{date}</td> 
+      <td >{exchange_product_id}</td>
       <td>{exchange_product_name}</td>
       <td>{delivery_basis_name}</td>
-      <td className="number">{count}</td>
-      <td className="number">{volume}</td>
-      <td className="number">{total}</td> 
+      <td >{count}</td>
+      <td >{volume}</td>
+      <td >{total}</td> 
     </tr>)
 }
 
 export default function ListView({items}: TItemList) {
   return (
-    <div>
+    <table className="table table-striped">
+    <thead>
+      <tr>
+        <th scope='row'>Дата торгов</th>
+        <th scope='row'>ID</th>
+        <th scope='row'>Наименование</th>
+        <th scope='row'>База</th>
+        <th scope='row'>Количество договоров</th>
+        <th scope='row'>Цена договора</th>
+        <th scope='row'>Итоговая стоимость</th>
+      </tr>
+    </thead>
+    <tbody>
       {items.map((item: TItem) =>
-        <Item key={item.exchange_product_id} {...item} />)}      
-    </div>
+        <Item key={item.exchange_product_id} {...item} />)}  
+    </tbody>    
+    </table>
   )
 }

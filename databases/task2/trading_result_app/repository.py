@@ -1,10 +1,18 @@
 import logging
 from sqlalchemy import desc, select
 from sqlalchemy.orm import load_only
-
+from redis import asyncio as aioredis
 from models import Item
-from schema import ItemFull, TradingDay
 
+from schema import ItemDTO, ItemFull, TradingDay
+from config import settings
+
+
+redis = aioredis.from_url(
+        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}",
+        encoding="utf8",
+        decode_responses=True,
+    )
 
 class Repository:
     @classmethod
@@ -22,11 +30,15 @@ class Repository:
 
     @classmethod
     async def get_one(cls, session, id: int) -> ItemFull:
+        item = await redis.get(f'item_{id}')
+        if item:
+            return ItemFull.model_validate_json(item)
         query = select(Item).filter_by(id=id)
         res = await session.execute(query)
         res_dto = ItemFull.model_validate(
             res.scalars().one_or_none(), from_attributes=True
         )
+        await redis.set(f'item_{id}', res_dto.model_dump_json())
         return res_dto
 
     @classmethod

@@ -1,15 +1,22 @@
 from fastapi import APIRouter, Depends
+from fastapi_cache import FastAPICache
 from fastapi_filter import FilterDepends
 from fastapi_cache.decorator import cache
+from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from schema import ItemDTO, ItemFull, TradingDay, ItemDateIdFilter, ItemIdFilter
 from database import get_async_session
 from repository import Repository as Repo
+from config import settings
 
 
 router = APIRouter(prefix="/api")
-
+redis = aioredis.from_url(
+        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}",
+        encoding="utf8",
+        decode_responses=True,
+    )
 
 def get_pag_params(limit: int = 10, skip: int = 0):
     return {"limit": limit, "skip": skip}
@@ -53,3 +60,8 @@ async def get_last_trading_dates(
 ) -> list[TradingDay]:
     res = await Repo.get_last_trading_dates(session, count)
     return res
+
+@router.get("/clear_cash/")
+async def clear():
+    await redis.flushdb()
+    return {"message": "cache cleared"}

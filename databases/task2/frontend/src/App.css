@@ -3,19 +3,6 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  font-size: small;
 }
 
-.line {
-  width: 95vw;
-  display: flex;
-}
-
-td {
-  display: inline;
-  text-align: left;
-  width: 40%;
-}
-
-.number {  
-  width: 20%;
-}

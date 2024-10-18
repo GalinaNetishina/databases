@@ -1,9 +1,8 @@
-FROM node:alpine as build
+FROM node:18.20.2
 
-COPY package.json package.json
-RUN npm install
-COPY . .
+WORKDIR /fastapi_app/frontend
 RUN npm run dev
+
 
 # FROM nginx:stable-alpine
 
