@@ -10,12 +10,12 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     POSTGRES_PASSWORD: str
-    SMTP_USER: str
-    SMTP_PASSWORD: str
+    SMTP_USER: str | None
+    SMTP_PASSWORD: str | None
     REDIS_HOST: str
     REDIS_PORT: int
-    FRONTEND_HOST: str
-    FRONTEND_PORT: int
+    FRONTEND_HOST: str | None
+    FRONTEND_PORT: int | None
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(Path.cwd().parent, ".env-non-dev")

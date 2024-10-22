@@ -38,15 +38,20 @@ class WriteItemRepo:
 class ReadItemRepo:
     @classmethod
     async def get_one(cls, session, id: int) -> ItemFull:
-        item = await redis.get(f"item_{id}")
-        if item:
-            return ItemFull.model_validate_json(item)
+        try:
+            item = await redis.get(f"item_{id}")        
+            if item:
+                return ItemFull.model_validate_json(item)
+        except Exception as e:
+            logging.error(e)
         query = select(Item).filter_by(id=id)
+        logging.info(query)
         res = await session.execute(query)
-        res_dto = ItemFull.model_validate(
-            res.scalars().one_or_none(), from_attributes=True
-        )
-        await redis.set(f"item_{id}", res_dto.model_dump_json())
+        res_dto = ItemFull.model_validate(res.scalars().one_or_none())
+        try:
+            await redis.set(f"item_{id}", res_dto.model_dump_json())
+        except Exception as e:
+            logging.error(e)
         return res_dto
 
     @classmethod
@@ -64,7 +69,7 @@ class ReadItemRepo:
         res = await session.execute(query)
         return list(
             map(
-                lambda x: ItemFull.model_validate(x, from_attributes=True),
+                lambda x: ItemFull.model_validate(x),
                 res.scalars().all(),
             )
         )
@@ -80,7 +85,7 @@ class ReadItemRepo:
         res = await session.execute(query)
         return list(
             map(
-                lambda x: ItemFull.model_validate(x, from_attributes=True),
+                lambda x: ItemFull.model_validate(x),
                 res.scalars().all(),
             )
         )

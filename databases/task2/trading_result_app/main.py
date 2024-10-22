@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
         encoding="utf8",
         decode_responses=True,
     )
-    await loading()
+    # await loading()
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     yield
 
@@ -67,7 +67,7 @@ async def loading():
         expire_on_commit=False,
     )
     async with session_maker() as session:
-        after = "01.10.2024"
+        after = "01.01.2023"
         logging.debug("data loading")
         dl = Downloader(after, partial(r.WriteItemRepo.add_many, session))
         await dl.download()

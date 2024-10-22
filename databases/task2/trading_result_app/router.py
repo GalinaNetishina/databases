@@ -1,11 +1,11 @@
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from fastapi import APIRouter, Depends
 from fastapi_filter import FilterDepends
 from fastapi_cache.decorator import cache
 from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from schema import ItemDTO, ItemFull, TradingDay, ItemDateIdFilter, ItemIdFilter
+from schema import ItemFull, TradingDay, ItemDateIdFilter, ItemIdFilter
 from database import get_async_session
 import repository as r
 from config import settings
@@ -29,7 +29,7 @@ async def get_trading_results(
     pag_params=Depends(get_pag_params),
     filter: ItemIdFilter = FilterDepends(ItemIdFilter),
     session: AsyncSession = Depends(get_async_session),
-) -> list[ItemDTO]:
+) -> list[ItemFull]:
     res = await r.ReadItemRepo.get_last(session, filter, **pag_params)
     return res
 
@@ -40,7 +40,7 @@ async def get_dynamics(
     pag_params=Depends(get_pag_params),
     filter: ItemIdFilter = FilterDepends(ItemDateIdFilter),
     session: AsyncSession = Depends(get_async_session),
-) -> list[ItemDTO]:
+) -> list[ItemFull]:
     res = await r.ReadItemRepo.get_many(session, filter, **pag_params)
     return res
 
@@ -81,21 +81,26 @@ async def clear():
     return {"message": "cache cleared"}
 
 
-# @router.get("/DB_load/")
-# async def db_load(
-#     tasks: BackgroundTasks,
-#     session: AsyncSession = Depends(get_async_session)):
-#     dates = await r.TradingDatesRepo.get_many(session, 1)
-#     if not dates:
-#         after = "01.01.2024"
-#         response = {"message": f"data after {after} loading"}
-#         dl = Downloader(after, partial(r.WriteItemRepo.add_many, session))
-#         tasks.add_task(dl.download)
-#     elif dates and (datetime.today().date() - dates[0].date > timedelta(days=3)):
-#             after = dates[0].date.strftime("%d.%m.%Y")
-#             response = {"message": f"data after {after} loading"}
-#             dl = Downloader(after, partial(r.WriteItemRepo.add_many, session))
-#             tasks.add_task(dl.download)
-#     else:
-#         response = {"message": f'data still fresh, last trading date = {dates[0].date.strftime("%d.%m.%Y")}'}
-#     return response
+@router.get("/DB_load/")
+async def db_load(
+    tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_async_session)):
+    from utils import Downloader
+    from functools import partial
+    from datetime import datetime, timedelta
+    dates = await r.TradingDatesRepo.get_many(session, 1)
+    if  dates:
+        after = "01.01.2023"
+        response = {"message": f"data after {after} loading"}
+        dl = Downloader(after, partial(r.WriteItemRepo.add_many, session))
+        tasks.add_task(dl.download)
+        await session.commit()
+    elif dates and (datetime.today().date() - dates[0].date > timedelta(days=3)):
+            after = dates[0].date.strftime("%d.%m.%Y")
+            response = {"message": f"data after {after} loading"}
+            dl = Downloader(after, partial(r.WriteItemRepo.add_many, session))
+            tasks.add_task(dl.download)
+            await session.commit()
+    else:
+        response = {"message": f'data still fresh, last trading date = {dates[0].date.strftime("%d.%m.%Y")}'}
+    return response
