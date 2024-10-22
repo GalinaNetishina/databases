@@ -10,8 +10,9 @@ export type TItem = {
     date: Date   
   }
 
-export type TDate = {
+export type TDateProps = {
   date: Date
+  handleClick: (url: string) => void
 }
 
 export type TItemList = {

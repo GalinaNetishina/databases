@@ -6,11 +6,12 @@ function Item({
    exchange_product_name,
   delivery_basis_name,
 total, count, volume}: TItem) {
+  const ind = exchange_product_name.indexOf(' ', 25)
   return (
     <tr >     
       <td >{date}</td> 
       <td >{exchange_product_id}</td>
-      <td>{exchange_product_name}</td>
+      <td>{exchange_product_name.slice(0, ind)}</td>
       <td>{delivery_basis_name}</td>
       <td >{count}</td>
       <td >{volume}</td>
@@ -20,9 +21,10 @@ total, count, volume}: TItem) {
 
 export default function ListView({items}: TItemList) {
   return (
-    <table className="table table-striped">
+    <div className="table-responsive display-block width-100">
+    <table className="table table-striped table-condensed ">
     <thead>
-      <tr>
+      <tr className="success">
         <th scope='row'>Дата торгов</th>
         <th scope='row'>ID</th>
         <th scope='row'>Наименование</th>
@@ -37,5 +39,6 @@ export default function ListView({items}: TItemList) {
         <Item key={item.exchange_product_id} {...item} />)}  
     </tbody>    
     </table>
+    </div>
   )
 }

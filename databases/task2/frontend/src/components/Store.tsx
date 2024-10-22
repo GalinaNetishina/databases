@@ -7,22 +7,20 @@ import axios from 'axios';
 
 
 export default function Store () {
-  const [source, setSource] = useState<String>('http://localhost:8000/api/get_trading_results/')
+  const [source, setSource] = useState<string>('http://localhost:8000/api/get_trading_results/')
   const [items, setItems] = useState<TItem[]>([])
-  const handler = (url) => {    
+  const handler = (url: string) => {    
     setSource(url)
-    fetchItems()
-    console.log(source, items)
+    fetchItems(url)
   }
   
-  const fetchItems = () => {
-    axios.get(source)
+  const fetchItems = (url) => {
+    axios.get(url)
       .then(res => {setItems(res.data)})
       }
       
   useEffect(()=>{
-    fetchItems()}, [])
-
+    fetchItems(source)}, [])
 
   return (
     <div>

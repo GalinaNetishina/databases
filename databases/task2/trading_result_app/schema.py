@@ -35,7 +35,7 @@ class ItemIdFilter(Filter):
 
 
 class ItemDateIdFilter(ItemIdFilter):
-    model_config = {'extra': "allow"}
+    model_config = {"extra": "allow"}
     date__gte: datetime.date | None = Field(
         alias="start_date",
         default=datetime.datetime.today().date() - datetime.timedelta(days=7),
@@ -43,4 +43,3 @@ class ItemDateIdFilter(ItemIdFilter):
     date__lte: datetime.date | None = Field(
         alias="end_date", default=datetime.datetime.today().date()
     )
-

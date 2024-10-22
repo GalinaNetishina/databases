@@ -39,7 +39,7 @@ class Downloader:
     async def produce(self, date) -> None:
         async with aiohttp.ClientSession() as session:
             file = await self._fetch_file(date, session)
-            logging.debug(f'produce - {file}')
+            logging.debug(f"produce - {file}")
             if not file:
                 return
             await self.process.put(asyncio.create_task(self.consume(file)))
@@ -50,16 +50,15 @@ class Downloader:
     async def consume(self, file) -> None:
         while True:
             try:
-                logging.debug(f'{file} consume')
+                logging.debug(f"{file} consume")
                 await self.cb(extract_items(file))
-                
+
                 self.process.task_done()
                 os.remove(file)
             except Exception as e:
                 print(e)
                 await asyncio.sleep(0.01)
                 break
-                
 
     @staticmethod
     async def _fetch_file(date: d, session) -> str:

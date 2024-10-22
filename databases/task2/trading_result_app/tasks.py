@@ -1,21 +1,17 @@
-import smtplib
 from celery.schedules import crontab
 from config import settings
 import requests
-from datetime import timedelta
-from email.message import EmailMessage
 from celery import Celery
 from redis import asyncio as aioredis
-from config import settings
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
 redis = aioredis.from_url(
-        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}",
-        encoding="utf8",
-        decode_responses=True,
-    )
+    f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}",
+    encoding="utf8",
+    decode_responses=True,
+)
 celery = Celery(
     "tasks", broker=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
 )
@@ -23,19 +19,20 @@ celery = Celery(
 
 celery.conf.beat_schedule = {
     "clear_cache": {
-        "task": 'tasks.refresh_cash',
-        "schedule": crontab(hour=6, minute=57),
+        "task": "tasks.refresh_cash",
+        "schedule": crontab(hour=14, minute=11),
     },
-    "email_tick": {
-        "task": 'tasks.refresh_cash',
-        "schedule": timedelta(minutes=3),
-    },
+    # "email_tick": {
+    #     "task": 'tasks.send_email',
+    #     "schedule": timedelta(days=1),
+    # },
 }
 
 
 @celery.task
 async def refresh_cash():
     await redis.flushdb()
+    requests.get("http://127.0.0.1:8000/api/clear_cashe")
     # requests.get('http://127.0.0.1:8000/api/last_trading_dates/?count=10')
     # requests.get('http://127.0.0.1:8000/api/get_trading_results/?limit=100&skip=0')
     return True
@@ -54,6 +51,5 @@ async def refresh_cash():
 #     email["Subject"] = "log"
 #     email["From"] = settings.SMTP_USER
 #     email["To"] = settings.SMTP_USER
-#     email.set_content(f"<div>Hello, {username}</div>", subtype="html")
+#     email.set_content(f"<div>Hello, {username}</div><div>Message from celery</div>", subtype="html")
 #     return email
-
